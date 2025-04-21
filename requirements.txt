@@ -10,6 +10,9 @@ anthropic
 # UI & PDF Handling (Workshop 1)
 gradio
 PyMuPDF # fitz
+ipywidgets>=8.0.0
+pandas>=2.0.0
+streamlit>=1.32.0
 
 # Data Exploration & Logging (Workshop 1)
 datasette
@@ -22,4 +25,4 @@ jupyter # or ipython
 modal-client
 
 # NOTE: Specific versions are missing and may need to be added for compatibility.
-# NOTE: This list is based on imports found in the code; transitive dependencies are not explicitly listed. 
+# NOTE: This list is based on imports found in the code; transitive dependencies are not explicitly listed.

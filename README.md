@@ -30,7 +30,7 @@ python app_pdf_profile.py
 
 It will display the UI
 
-![alt text](image.png)
+![alt text](images/image.png)
 
 Display the logs in a different terminal
 
@@ -44,7 +44,7 @@ Display the logs on the database
 datasette pdf_qa_logs_hw1b.db
 ```
 
-![alt text](image-1.png)
+![alt text](images/image-1.png)
 
 ## Deployment with [Modal](https://modal.com/)
 

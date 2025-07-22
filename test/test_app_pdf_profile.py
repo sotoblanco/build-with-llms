@@ -7,11 +7,12 @@ import pytest
 from logic import extract_profile_data
 
 import sys
-sys.path.append("../src")  # Ensure src is in the path for import
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 from app_pdf_profile import process_pdf
 
 def test_process_pdf_simple():
-    pdf_path = "../data/hugo_bowne_profile.pdf"
+    pdf_path = "data/hugo_bowne_profile.pdf"
     with open(pdf_path, "rb") as f:
         pdf_bytes = f.read()
         class DummyFile:

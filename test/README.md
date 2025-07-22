@@ -45,7 +45,33 @@ def test_process_pdf_simple():
 2. Add logging to the app_pdf_profile.py file, we used the logging_setup.py file to set up the logging and burr. 
 
 
-
 3. Log prompt versions, input/output metadata, we used the log_interaction function to log the prompt versions, input/output metadata are already implemented in the datasette. 
 
 4. In the app_pdf_profile.py file, we implemented the guardrail to check for profanity, injection, and banned terms. We also implemented the output validation to check for format patterns or banned terms.
+
+5. Optional: Set up a GitHub workflow to run the tests on PR.
+```yaml
+name: Run Python tests
+
+on:
+  pull_request:
+    branches: [ "main", "master" ]
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pymupdf gradio openai tiktoken
+      - name: Run tests
+        run: pytest -vv 
+```

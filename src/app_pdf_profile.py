@@ -12,6 +12,7 @@ import sqlite3
 from datetime import datetime
 import uuid
 import tiktoken
+import re
 
 ######## Database Setup ########
 ################################
@@ -249,30 +250,72 @@ def validate_json(output):
 
 #### Process PDF Function ############
 #######################################
+# Profanity and injection word list (expand as needed)
+PROFANITY_LIST = [
+    "badword1", "badword2", "damn", "shit", "fuck", "bitch", "asshole"
+]
+INJECTION_PATTERNS = [
+    r"[;\'\"].*--",  # SQL injection
+    r"<script.*?>",    # XSS
+    r"\b(drop|delete|truncate|insert|update|alter)\b",  # SQL keywords
+]
+
+# Output validation
+BANNED_TERMS = ["bannedword1", "bannedword2", "hack", "exploit"]
+FORMAT_PATTERNS = [
+    r"\{.*\}",  # JSON-like
+    r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",  # Email
+]
+
+def contains_profanity(text):
+    text_lower = text.lower()
+    return any(word in text_lower for word in PROFANITY_LIST)
+
+def contains_injection(text):
+    for pattern in INJECTION_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            return True
+    return False
+
+def contains_banned_terms(text):
+    text_lower = text.lower()
+    return any(term in text_lower for term in BANNED_TERMS)
+
+def matches_format_patterns(text):
+    for pattern in FORMAT_PATTERNS:
+        if re.search(pattern, text):
+            return True
+    return False
+
 def process_pdf(pdf_file, query, model_name, task, temperature, top_p, evaluation=None):
     if pdf_file is None:
         return "Please upload a PDF.", None
     if not query.strip():
         return "Please enter a valid query.", None
-    
+    # Input validation
+    if contains_profanity(query):
+        return "Input contains inappropriate language.", None
+    if contains_injection(query):
+        return "Input contains potentially malicious content.", None
     try:
         # Extract text chunks from the PDF
         chunks = extract_text_chunks(pdf_file)
-        
         # Rank and select relevant chunks
         relevant_chunks = simple_keyword_ranking(chunks, query)
-        
         # Combine relevant chunks with page references
         context = "\n\n".join([
             f"[Page {chunk['page']}]: {chunk['text']}"
             for chunk in relevant_chunks
         ])
-        
         # Generate the prompt with the relevant context
         prompt = generate_prompt(query, context, task)
-        
         # Rest of your existing code...
         response = llm(prompt, model_name, temperature, top_p)
+        # Output validation
+        if contains_banned_terms(response):
+            return "Output contains banned terms.", None
+        if not matches_format_patterns(response):
+            return "Output does not match required format.", None
         # Validate the response
         valid_json =  validate_json(response)
         # Calculate token counts
@@ -283,7 +326,6 @@ def process_pdf(pdf_file, query, model_name, task, temperature, top_p, evaluatio
         interaction_id = log_interaction(pdf_name, task, query, response, prompt,
                                          token_prompt, token_answer, temperature, top_p, model_name, valid_json)
         return response, interaction_id
-        
     except Exception as e:
         print(f"Error in process_pdf: {e}")
         return f"An error occurred: {str(e)}", None
